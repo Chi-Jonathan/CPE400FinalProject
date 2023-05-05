@@ -1,56 +1,63 @@
+# The team will simulate a mesh network where nodes and links may fail (Figure 5). Nodes and links may fail intermittently, as an input to the simulation, each node and link will have a certain probability to fail. When such failure occurs, the network must adapt and re-route to avoid the faulty link/node.
+
+from collections import defaultdict
+import random
+
+# Node names (represents vertices in the graph)
+nodes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
+
+# Graph (keys = node, value = connected nodes)
 graph = {
-"A": ["B", "C"],
-"B": ["A", "D"],
-"C": ["A", "D"],
-"D": ["B", "C", "E", "F"],
-"E": ["D", "G"],
-"F": ["D", "G", "H"],
-"G": ["E", "F"],
-"H": ["F", "I"],
-"I": ["H", "J", "K"],
-"J": ["I", "K", "L"],
-"K": ["I", "J", "L", "M", "N"],
-"L": ["J", "K", "N"],
-"M": ["K", "N"],
-"N": ["K", "L", "M"]}
+    "A": ["B", "C"],
+    "B": ["A", "D"],
+    "C": ["A", "D"],
+    "D": ["B", "C", "E", "F"],
+    "E": ["D", "G"],
+    "F": ["D", "G", "H"],
+    "G": ["E", "F"],
+    "H": ["F", "I"],
+    "I": ["H", "J", "K"],
+    "J": ["I", "K", "L"],
+    "K": ["I", "J", "L", "M", "N"],
+    "L": ["J", "K", "N"],
+    "M": ["K", "N"],
+    "N": ["K", "L", "M"]
+}
 
-start_node = input("\nInput the start node.")
-end_node = input("Input the end node")
-probability = float(input("Input the probability of a node/link breaking."))
+def simulate_failures(graph, probability):
+    """ Simulate link failures in the graph """
 
-# def dijkstras_unweighted(graph, start_node):
-#     unvisited = []
-#     for node in graph:
-#         unvisited.append(node)
-#     unvisited.remove(start_node)
+    # New graph with empty connections (will fill this later)
+    updated_graph = defaultdict(list)
 
-#     #Just initializing all the distances
-#     table = {}
-#     for node in graph:
-#         table[node] = 999999
-#     table[start_node] = 0
-#     current_node = start_node
+    # Set to store broken links as tuples (node1, node2)
+    broken_links = set()
 
-#     #Running through dijkstras now
-#     while len(unvisited) > 0:
+    # Go through the nodes and its neighbors in graph
+    for node, neighbors in graph.items():
+        connected_neighbors = []
+        for neighbor in neighbors:
+            # Generate random number and if it is greater than probability, keep the connection
+            if random.random() > probability:
+                connected_neighbors.append(neighbor)
+            else:
+                # If the link is broken, add it to the broken_links set
+                # Use sorted() to ensure (node1, node2) and (node2, node1) are treated as the same link
+                broken_links.add(tuple(sorted((node, neighbor))))
 
-#         #This makes a list of adjacent nodes that are also unvisited
-#         adjacent_nodes = [node for node in graph[current_node] if node in unvisited]
+        # Ensure at least one connection
+        if not connected_neighbors:
+            connected_neighbors.append(random.choice(neighbors))
 
-#         #This adds the nodes' distances into the table
-#         for node in adjacent_nodes:
-#             table[node] = min(table[current_node] + 1, table[node])
-        
-#         #This makes current_node the minimum unvisited node
-#         current_node = unvisited[0]
-#         for node in unvisited:
-#             if table[current_node] > table[node]:
-#               current_node = node
+        # Update new graph with the connections
+        updated_graph[node] = connected_neighbors
+        # Update reverse connections
+        for connected_neighbor in connected_neighbors:
+            updated_graph[connected_neighbor].append(node)
 
-#         #This removes the current_node from the unvisited list
-#         unvisited.remove(current_node)
-    
-#     return table
+    return updated_graph, broken_links
+
+
 
 def dijkstras_unweighted(graph, start_node):
     unvisited = []
@@ -86,5 +93,23 @@ def dijkstras_unweighted(graph, start_node):
         unvisited.remove(current_node)
     
     return table
-            
-print(dijkstras_unweighted(graph, "D"))
+
+def main():
+    start_node = input("\nInput the start node: ")
+    end_node = input("Input the end node: ")
+    probability = float(input("Input the probability of a node/link breaking: "))
+
+    updated_graph, broken_links = simulate_failures(graph, probability)
+    distance_table = dijkstras_unweighted(updated_graph, start_node)
+
+    distance = distance_table[end_node]
+    if distance != 999999:
+        print(f"\nShortest path distance: {distance}")
+    else:
+        print("\nNo path found.")
+
+    print(f"Broken links: {broken_links}")
+
+if __name__ == "__main__":
+    main()
+
