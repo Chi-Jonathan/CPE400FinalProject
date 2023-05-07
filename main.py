@@ -24,39 +24,40 @@ graph = {
     "N": ["K", "L", "M"]
 }
 
+def dfs(graph, start, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(start)
+    for neighbor in graph[start]:
+        if neighbor not in visited:
+            dfs(graph, neighbor, visited)
+    return visited
+
 def simulate_failures(graph, probability):
-    """ Simulate link failures in the graph """
-
-    # New graph with empty connections (will fill this later)
     updated_graph = defaultdict(list)
-
-    # Set to store broken links as tuples (node1, node2)
     broken_links = set()
 
-    # Go through the nodes and its neighbors in graph
     for node, neighbors in graph.items():
-        connected_neighbors = []
         for neighbor in neighbors:
-            # Generate random number and if it is greater than probability, keep the connection
-            if random.random() > probability:
-                connected_neighbors.append(neighbor)
-            else:
-                # If the link is broken, add it to the broken_links set
-                # Use sorted() to ensure (node1, node2) and (node2, node1) are treated as the same link
+            if random.random() <= probability:
                 broken_links.add(tuple(sorted((node, neighbor))))
 
-        # Ensure at least one connection
-        if not connected_neighbors:
-            connected_neighbors.append(random.choice(neighbors))
-
-        # Update new graph with the connections
+    for node, neighbors in graph.items():
+        connected_neighbors = [neighbor for neighbor in neighbors if tuple(sorted((node, neighbor))) not in broken_links]
         updated_graph[node] = connected_neighbors
-        # Update reverse connections
-        for connected_neighbor in connected_neighbors:
-            updated_graph[connected_neighbor].append(node)
+
+    fixed_links = set()
+    for link in broken_links:
+        node1, node2 = link
+        visited = dfs(updated_graph, node1)
+        if node2 not in visited:
+            updated_graph[node1].append(node2)
+            updated_graph[node2].append(node1)
+            fixed_links.add(link)
+
+    broken_links -= fixed_links
 
     return updated_graph, broken_links
-
 
 
 def dijkstras_unweighted(graph, start_node):
@@ -115,6 +116,8 @@ def main():
 
     updated_graph, broken_links = simulate_failures(graph, probability)
     distance_table = dijkstras_unweighted(updated_graph, start_node)
+
+    print(f"\nUpdated graph: {updated_graph}")
 
     distance = distance_table[end_node]
     if None not in distance:
