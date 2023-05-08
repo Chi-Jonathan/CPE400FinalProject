@@ -25,12 +25,18 @@ graph = {
 }
 
 def dfs(graph, start, visited=None):
+    # If visited set is not provided, initialize an empty set
     if visited is None:
         visited = set()
+        
+    # Add the current start node to the visited set
     visited.add(start)
+    # Iterate through neighbors of the start node
     for neighbor in graph[start]:
+        # If the neighbor node has not been visited yet, perform DFS recursively
         if neighbor not in visited:
             dfs(graph, neighbor, visited)
+    # visited set contains all nodes reachable from the start node
     return visited
 
 def simulate_failures(graph, probability):
