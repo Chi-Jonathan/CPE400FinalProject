@@ -12,3 +12,8 @@ CD in to the project directory and run the command
 python3 main.py
 
 in the terminal to run the simulation. The user should expect to see prompts to input a start node, end node, and probability for failure.
+
+## Contributions
+Jessica Nam - Created the functionalities to simulate failures and depth first search.
+Jonathan Chi - Created the functionalities for Dijkstra's algorithm and user input.
+Both members worked on debugging and the project document together.
