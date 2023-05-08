@@ -40,29 +40,38 @@ def dfs(graph, start, visited=None):
     return visited
 
 def simulate_failures(graph, probability):
+    # Initialize the updated graph as a defaultdict with lists as default values
     updated_graph = defaultdict(list)
+    # Initialize a set to store broken links
     broken_links = set()
 
+    # Iterate through nodes and their neighbors in the original graph
     for node, neighbors in graph.items():
         for neighbor in neighbors:
+            # If a random value is less than or equal to the input probability, add the link as broken
             if random.random() <= probability:
                 broken_links.add(tuple(sorted((node, neighbor))))
-
+    # Iterate through nodes and their neighbors in the original graph again
     for node, neighbors in graph.items():
+        # Create a list of connected neighbors, filtering out the broken links
         connected_neighbors = [neighbor for neighbor in neighbors if tuple(sorted((node, neighbor))) not in broken_links]
+        # Assign the connected neighbors to the corresponding node in the updated graph
         updated_graph[node] = connected_neighbors
-
+    # Initialize a set to store fixed links
     fixed_links = set()
+    # Iterate through the broken links
     for link in broken_links:
         node1, node2 = link
+        # Use DFS to find the nodes reachable from node1 in the updated graph
         visited = dfs(updated_graph, node1)
+        # If node2 is not reachable, fix the link by adding it back to the updated graph
         if node2 not in visited:
             updated_graph[node1].append(node2)
             updated_graph[node2].append(node1)
             fixed_links.add(link)
-
+    # Remove the fixed links from the broken_links set
     broken_links -= fixed_links
-
+    # Return the updated graph and the final set of broken links
     return updated_graph, broken_links
 
 
