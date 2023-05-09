@@ -1,28 +1,29 @@
 # The team will simulate a mesh network where nodes and links may fail (Figure 5). Nodes and links may fail intermittently, as an input to the simulation, each node and link will have a certain probability to fail. When such failure occurs, the network must adapt and re-route to avoid the faulty link/node.
 
+from ast import literal_eval
 from collections import defaultdict
 import random
 
-# Node names (represents vertices in the graph)
-nodes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N"]
+#Gets a network from a file
+def get_network(filename):
+  f = open(filename, "r")
+  network = []
+  connection = ("", "")
+  line = f.readline()[:-1]
+  while line:
+    connection = tuple(line.split(":"))
+    network.append(connection)
+    line = f.readline()[:-1]
+  f.close()
+  return network
 
-# Graph (keys = node, value = connected nodes)
-graph = {
-    "A": ["B", "C"],
-    "B": ["A", "D"],
-    "C": ["A", "D"],
-    "D": ["B", "C", "E", "F"],
-    "E": ["D", "G"],
-    "F": ["D", "G", "H"],
-    "G": ["E", "F"],
-    "H": ["F", "I"],
-    "I": ["H", "J", "K"],
-    "J": ["I", "K", "L"],
-    "K": ["I", "J", "L", "M", "N"],
-    "L": ["J", "K", "N"],
-    "M": ["K", "N"],
-    "N": ["K", "L", "M"]
-}
+#Builds the network into a graph/adjacency list
+def build_network(network):
+  graph = {}
+  for connection in network:
+    graph[connection[0]] = literal_eval(connection[1])
+  return graph
+  
 
 def dfs(graph, start, visited=None):
     # If visited set is not provided, initialize an empty set
@@ -110,25 +111,40 @@ def dijkstras_unweighted(graph, start_node):
     
     return table
 
+
+######################
+
+
+
 def main():
+
+    network = input("\nInput which graph you want to use (options: graph1.txt, graph2.txt, graph3.txt): ")
+    while network != "graph1.txt" and network!="graph2.txt" and network!="graph3.txt":
+      network = input("Input which graph you want to use (options: graph1.txt, graph2.txt, graph3.txt): ")
+
+    graph = build_network(get_network(network))
+    nodes = []
+    for node in graph:
+      nodes.append(node)
+      
     start_node = input("\nInput the start node: ").upper()
     while start_node not in nodes:
-      print("Invalid node (Nodes go from A-N)")
+      print(f"Invalid node (Nodes go from A-{nodes[-1]})")
       start_node = input("Input the start node: ").upper()
 
-    end_node = input("Input the end node: ").upper()
+    end_node = input("\nInput the end node: ").upper()
     while end_node not in nodes:
-      print("Invalid node (Nodes go from A-N)")
+      print(f"Invalid node (Nodes go from A-{nodes[-1]})")
       end_node = input("Input the end node: ").upper()
       
-    probability = input("Input the probability of a node/link breaking (0.0-1.0): ")
+    probability = input("\nInput the probability of a node/link breaking (0.0-1.0): ")
     while not probability.replace('.', '', 1).isdigit() or float(probability)>1 or float(probability)<0:
       print("Invalid input")
       probability = input("Input the probability of a node/link breaking (0.0-1.0): ")
       
     probability = float(probability)
     
-
+  
     updated_graph, broken_links = simulate_failures(graph, probability)
     distance_table = dijkstras_unweighted(updated_graph, start_node)
 
